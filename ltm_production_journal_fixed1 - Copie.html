@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Journal d'Activité Production - LTM (Leading Technology in Mechanics)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--ltm-red:#dc2626;--ltm-dark:#1f2937;--ltm-light:#f8fafc;--ltm-active:#3b82f6;--ltm-active-bg:#eff6ff}
+    body{font-family:'Inter',sans-serif}
+    .ltm-gradient{background:linear-gradient(135deg,var(--ltm-red) 0%,#b91c1c 100%)}
+    .ltm-logo-container{background:var(--ltm-red);border:2px solid var(--ltm-dark);border-radius:8px;padding:8px 16px;position:relative;transform:skew(-5deg);box-shadow:0 4px 6px -1px rgba(0,0,0,.1)}
+    .ltm-logo-text{transform:skew(5deg);color:#fff;font-weight:900;font-size:1.5rem;letter-spacing:2px}
+    .ltm-tagline{font-size:.75rem;color:var(--ltm-dark);font-weight:600;margin-top:2px}
+    .fade-in{animation:fadeIn .3s ease-in}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .row-hover:hover{background:#fef2f2;cursor:pointer}
+    .loading-spinner{border:2px solid #f3f3f3;border-top:2px solid var(--ltm-red);border-radius:50%;width:20px;height:20px;animation:spin 1s linear infinite}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    .notification{position:fixed;top:20px;right:20px;z-index:1000;min-width:300px;transform:translateX(400px);opacity:0;transition:all .3s ease}
+    .notification.show{transform:translateX(0);opacity:1}
+    .badge{display:inline-flex;align-items:center;padding:.25rem .5rem;border-radius:.375rem;font-size:.75rem;font-weight:500}
+    .badge-green{background:#dcfce7;color:#166534}
+    .badge-yellow{background:#fef3c7;color:#92400e}
+    .badge-red{background:#fee2e2;color:#dc2626}
+    .badge-blue{background:#dbeafe;color:#1e40af}
+    .ltm-btn-primary{background:var(--ltm-red);color:#fff;font-weight:600;border:none;transition:all .2s}
+    .ltm-btn-primary:hover{background:#b91c1c;transform:translateY(-1px);box-shadow:0 4px 12px rgba(220,38,38,.4)}
+    .ltm-nav-link{transition:all .2s ease}
+    .ltm-nav-link.active{color:var(--ltm-active)!important;border-color:var(--ltm-active)!important;background-color:var(--ltm-active-bg)!important;border-radius:8px 8px 0 0;margin:-2px 0;padding:8px 16px!important;box-shadow:0 2px 4px rgba(59,130,246,.1)}
+
+    /* Phase colors */
+    .phase-execution{background:#10b981;color:white}
+    .phase-reglage{background:#f59e0b;color:white}
+    .phase-arret-non-planifie{background:#ef4444;color:white}
+    .phase-arret-planifie{background:#dc2626;color:white}
+    .phase-arret{background:#6b7280;color:white}
+    .phase-default{background:#9ca3af;color:white}
+
+    /* Machine en arrêt - style spécial */
+    .machine-arret{background-color:#f9fafb!important;border:1px solid #d1d5db!important;color:#6b7280!important}
+    .machine-arret .machine-name{color:#374151!important;font-weight:600}
+
+    /* Section informations de création */
+    .creation-info-section{background:#f0f9ff;border:1px solid #0ea5e9;border-radius:8px;padding:16px;margin-bottom:16px}
+    .creation-info-title{color:#0369a1;font-weight:600;font-size:14px;margin-bottom:8px;display:flex;align-items:center}
+    .creation-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .creation-info-item{font-size:13px}
+    .creation-info-label{color:#6b7280;font-weight:500}
+    .creation-info-value{color:#1f2937;font-weight:600;font-family:monospace}
+
+    /* Styles pour les alertes */
+    .alert-card{transition:all 0.2s ease}
+    .alert-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+    .alert-high{border-left:4px solid #dc2626}
+    .alert-medium{border-left:4px solid #f59e0b}
+    .alert-low{border-left:4px solid #10b981}
+    
+    /* Styles améliorés pour les détails des alertes */
+    .alert-details{
+      background-color:#f8fafc;
+      border-radius:6px;
+      padding:12px;
+      margin-top:12px;
+      font-size:14px;
+      line-height:1.6;
+      border-left:3px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Notifications -->
+  <div id="notification" class="notification">
+    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+      <div class="flex items-center">
+        <div id="notificationIcon" class="flex-shrink-0 w-5 h-5 mr-3"></div>
+        <div id="notificationMessage" class="text-sm font-medium text-gray-900"></div>
+        <button onclick="hideNotification()" class="ml-4 text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application principale -->
+  <div id="mainApp">
+    <!-- Header LTM -->
+    <nav class="ltm-gradient shadow-lg">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <!-- Logo -->
+            <div class="flex items-center space-x-4">
+              <div class="ltm-logo-container"><div class="ltm-logo-text">LTM</div></div>
+              <div>
+                <div class="ltm-tagline text-white text-xs font-semibold">LEADING TECHNOLOGY</div>
+                <div class="ltm-tagline text-white text-xs font-semibold">IN MECHANICS</div>
+              </div>
+            </div>
+            <!-- Navigation -->
+            <div class="hidden md:ml-8 md:flex md:space-x-2">
+              <a href="#" onclick="showPage('journal')" class="ltm-nav-link border-white text-white inline-flex items-center px-4 pt-1 pb-2 border-b-2 text-sm font-medium">
+                <i class="fas fa-clipboard-list mechanical-icon text-white mr-2"></i>Journal de Production
+              </a>
+              <a href="#" onclick="showPage('dashboard')" class="ltm-nav-link border-transparent text-red-100 hover:border-red-200 hover:text-white inline-flex items-center px-4 pt-1 pb-2 border-b-2 text-sm font-medium">
+                <i class="fas fa-tachometer-alt mechanical-icon text-red-200 mr-2"></i>Tableau de Bord
+              </a>
+              <a href="#" onclick="showPage('referentiels')" class="ltm-nav-link border-transparent text-red-100 hover:border-red-200 hover:text-white inline-flex items-center px-4 pt-1 pb-2 border-b-2 text-sm font-medium">
+                <i class="fas fa-cogs mechanical-icon text-red-200 mr-2"></i>Référentiels Techniques
+              </a>
+              <a href="#" onclick="showPage('suivi')" class="ltm-nav-link border-transparent text-red-100 hover:border-red-200 hover:text-white inline-flex items-center px-4 pt-1 pb-2 border-b-2 text-sm font-medium">
+                <i class="fas fa-clipboard-check mechanical-icon text-red-200 mr-2"></i>Suivi machines
+              </a>
+              <a href="#" onclick="showPage('alertes')" class="ltm-nav-link border-transparent text-red-100 hover:border-red-200 hover:text-white inline-flex items-center px-4 pt-1 pb-2 border-b-2 text-sm font-medium">
+                <i class="fas fa-exclamation-triangle mechanical-icon text-red-200 mr-2"></i>Alertes & Sauts
+              </a>
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="text-sm text-white">
+              <span class="px-3 py-1 text-xs bg-white/20 text-white rounded-full font-semibold">
+                <i class="fas fa-industry mr-1"></i>Production LTM
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+
+      <!-- Page Journal -->
+      <div id="journalPage" class="page-content">
+        <div class="mb-6 flex items-center justify-between">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+              <i class="fas fa-industry mechanical-icon text-2xl mr-3"></i>
+              Journal d'Activité Production LTM
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+              <i class="fas fa-wrench mr-2 text-red-500"></i>
+              Système de traçabilité et de gestion des activités mécaniques
+            </p>
+          </div>
+          <div class="flex space-x-3">
+            <button onclick="loadJournal()" class="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm font-medium">
+              <i class="fas fa-sync mr-2"></i> Actualiser
+            </button>
+            <button onclick="openAddModal()" class="inline-flex items-center px-6 py-2 rounded-lg ltm-btn-primary shadow-lg font-medium">
+              <i class="fas fa-plus mr-2"></i> Nouvelle Opération
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtres rapides -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div class="flex items-center mb-4">
+            <i class="fas fa-filter mechanical-icon text-lg mr-2"></i>
+            <h3 class="text-lg font-semibold text-gray-800">Filtres de Production</h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                <i class="fas fa-calendar-alt mr-1 text-red-500"></i>Période
+              </label>
+              <select id="filterPeriod" onchange="applyFilters()" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500">
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois</option>
+                <option value="all" selected>Toutes</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                <i class="fas fa-industry mr-1 text-red-500"></i>Machine
+              </label>
+              <select id="filterMachine" onchange="applyFilters()" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500">
+                <option value="">Toutes les machines</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                <i class="fas fa-users mr-1 text-red-500"></i>Équipe
+              </label>
+              <select id="filterEquipe" onchange="applyFilters()" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500">
+                <option value="">Toutes les équipes</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                <i class="fas fa-tasks mr-1 text-red-500"></i>Statut
+              </label>
+              <select id="filterStatut" onchange="applyFilters()" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500">
+                <option value="">Tous les statuts</option>
+                <option value="En cours">En cours</option>
+                <option value="Clôturé">Clôturé</option>
+                <option value="En attente">En attente</option>
+                <option value="Suspendu">Suspendu</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tableau -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="ltm-gradient px-6 py-4">
+            <h2 class="text-lg font-bold text-white flex items-center">
+              <i class="fas fa-list-alt mr-2"></i>
+              Entrées du Journal de Production LTM
+            </h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table id="journalTable" class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-key mr-1"></i>ID Rapport</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-clock mr-1"></i>Date/Heure</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-user mr-1"></i>Opérateur</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-industry mr-1"></i>Machine</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-wrench mr-1"></i>Opération</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-cube mr-1"></i>Référence</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-barcode mr-1"></i>N° Lot</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-users mr-1"></i>Équipe</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-hashtag mr-1"></i>Nb Op.</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-check-circle mr-1 text-green-500"></i>Qté Bonne</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-times-circle mr-1 text-red-500"></i>Qté Rebut</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-exclamation-triangle mr-1 text-orange-500"></i>Motif Rebut</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-info-circle mr-1"></i>Statut</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><i class="fas fa-tools mr-1"></i>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" id="journalTableBody">
+                <tr id="loadingRow">
+                  <td colspan="14" class="px-6 py-12 text-center text-gray-500">
+                    <div class="flex items-center justify-center">
+                      <div class="loading-spinner mr-3"></div>
+                      Chargement des données de production LTM...
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page Dashboard -->
+      <div id="dashboardPage" class="page-content hidden">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-tachometer-alt mechanical-icon text-2xl mr-3"></i>
+            Tableau de Bord LTM
+          </h1>
+          <p class="mt-2 text-sm text-gray-600">
+            <i class="fas fa-chart-line mr-2 text-red-500"></i>
+            Vue d'ensemble des performances de production mécanique
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500">
+            <div class="flex items-center">
+              <div class="p-3 bg-red-100 rounded-lg"><i class="fas fa-cogs text-red-600 text-xl"></i></div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Production du jour</p>
+                <p class="text-3xl font-bold text-gray-900" id="kpiProductionJour">-</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
+            <div class="flex items-center">
+              <div class="p-3 bg-green-100 rounded-lg"><i class="fas fa-check-circle text-green-600 text-xl"></i></div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Taux qualité</p>
+                <p class="text-3xl font-bold text-gray-900" id="kpiTauxQualite">-</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-yellow-500">
+            <div class="flex items-center">
+              <div class="p-3 bg-yellow-100 rounded-lg"><i class="fas fa-clock text-yellow-600 text-xl"></i></div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">En cours</p>
+                <p class="text-3xl font-bold text-gray-900" id="kpiEnCours">-</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500">
+            <div class="flex items-center">
+              <div class="p-3 bg-red-100 rounded-lg"><i class="fas fa-exclamation-triangle text-red-600 text-xl"></i></div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Incidents</p>
+                <p class="text-3xl font-bold text-gray-900" id="kpiIncidents">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center py-12 text-gray-500">
+          <div class="ltm-logo-container inline-block mb-4"><div class="ltm-logo-text">LTM</div></div>
+          <p class="text-lg font-medium">Graphiques et analyses en cours de développement</p>
+          <p class="text-sm">Module avancé de Business Intelligence LTM</p>
+        </div>
+      </div>
+
+      <!-- Page Référentiels -->
+      <div id="referentielsPage" class="page-content hidden">
+        <div class="mb-6">
+          <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-cogs mechanical-icon text-2xl mr-3"></i>
+            Référentiels Techniques LTM
+          </h1>
+          <p class="mt-2 text-sm text-gray-600">
+            <i class="fas fa-database mr-2 text-red-500"></i>
+            Configuration des machines, opérations et références produits LTM
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer hover:border-red-300" onclick="showReferentiel('machines')">
+            <div class="text-center">
+              <div class="mx-auto w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                <i class="fas fa-industry text-2xl text-red-600"></i>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900">Machines de Production</h3>
+              <p class="text-sm text-gray-500 mt-2">Gestion du parc machines LTM</p>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer hover:border-red-300" onclick="showReferentiel('operations')">
+            <div class="text-center">
+              <div class="mx-auto w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                <i class="fas fa-wrench text-2xl text-green-600"></i>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900">Opérations Techniques</h3>
+              <p class="text-sm text-gray-500 mt-2">Types d'opérations mécaniques</p>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer hover:border-red-300" onclick="showReferentiel('references')">
+            <div class="text-center">
+              <div class="mx-auto w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                <i class="fas fa-cube text-2xl text-purple-600"></i>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900">Références Produits</h3>
+              <p class="text-sm text-gray-500 mt-2">Catalogue produits LTM</p>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer hover:border-red-300" onclick="showReferentiel('equipes')">
+            <div class="text-center">
+              <div class="mx-auto w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <i class="fas fa-users text-2xl text-orange-600"></i>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900">Équipes de Production</h3>
+              <p class="text-sm text-gray-500 mt-2">Organisation des équipes LTM</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page Suivi machines -->
+      <div id="suiviPage" class="page-content hidden">
+        <div class="mb-6 flex items-center justify-between">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+              <i class="fas fa-clipboard-check mechanical-icon text-2xl mr-3"></i>
+              Suivi des machines
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+              <i class="fas fa-industry mr-2 text-red-500"></i>
+              État instantané des machines, groupé par secteur
+            </p>
+          </div>
+          <div class="flex space-x-3">
+            <div class="relative">
+              <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+              <input id="suiviSearch" type="text" placeholder="Rechercher une machine / phase / lot..."
+                     class="pl-9 w-72 px-3 py-2 rounded-lg border border-gray-300 focus:ring-red-500 focus:border-red-500 text-sm"
+                     oninput="renderSuiviMachines()">
+            </div>
+            <button onclick="loadSuiviMachines()" class="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm font-medium">
+              <i class="fas fa-sync mr-2"></i> Actualiser
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Secteur</label>
+              <select id="suiviFilterSecteur" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                      onchange="renderSuiviMachines()">
+                <option value="">Tous les secteurs</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Phase</label>
+              <select id="suiviFilterPhase" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                      onchange="renderSuiviMachines()">
+                <option value="">Toutes les phases</option>
+                <option>Reglage</option>
+                <option>Execution</option>
+                <option>Arret Non Planifie</option>
+                <option>Arret Planifie</option>
+                <option>ARRET</option>
+              </select>
+            </div>
+            <div class="md:col-span-2 flex items-end">
+              <span class="text-xs text-gray-500">
+                • <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span> Execution
+                • <span class="inline-block w-2.5 h-2.5 rounded-full bg-orange-400"></span> Réglage
+                • <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500"></span> Arrêt Non Planifié
+                • <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-700"></span> Arrêt Planifié
+                • <span class="inline-block w-2.5 h-2.5 rounded-full bg-gray-400"></span> ARRÊT
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div id="suiviContainer" class="space-y-10"></div>
+      </div>
+
+      <!-- Page Alertes & Sauts -->
+      <div id="alertesPage" class="page-content hidden">
+        <div class="mb-6 flex items-center justify-between">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+              <i class="fas fa-exclamation-triangle mechanical-icon text-2xl mr-3"></i>
+              Alertes & Sauts de Production LTM
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+              <i class="fas fa-bell mr-2 text-red-500"></i>
+              Surveillance des anomalies et problèmes de production
+            </p>
+          </div>
+          <div class="flex space-x-3">
+            <button onclick="loadAlertes()" class="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm font-medium">
+              <i class="fas fa-sync mr-2"></i> Actualiser
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtres alertes -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div class="flex items-center mb-4">
+            <i class="fas fa-filter mechanical-icon text-lg mr-2"></i>
+            <h3 class="text-lg font-semibold text-gray-800">Filtres des Alertes</h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                <i class="fas fa-search mr-1 text-red-500"></i>Recherche
+              </label>
+              <input type="text" id="alertesSearch" placeholder="Rechercher une référence..." 
+                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                     oninput="filterAlertes()">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">
+                <i class="fas fa-flag mr-1 text-red-500"></i>Niveau de priorité
+              </label>
+              <select id="alertesPriorite" onchange="filterAlertes()" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500">
+                <option value="">Toutes les priorités</option>
+                <option value="high">Élevée</option>
+                <option value="medium">Moyenne</option>
+                <option value="low">Faible</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <span class="text-xs text-gray-500">
+                • <span class="inline-block w-3 h-3 bg-red-500 mr-1"></span> Élevée
+                • <span class="inline-block w-3 h-3 bg-yellow-500 mr-1"></span> Moyenne  
+                • <span class="inline-block w-3 h-3 bg-green-500 mr-1"></span> Faible
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liste des alertes -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="ltm-gradient px-6 py-4">
+            <h2 class="text-lg font-bold text-white flex items-center">
+              <i class="fas fa-exclamation-circle mr-2"></i>
+              Alertes Actives LTM
+            </h2>
+          </div>
+          <div id="alertesContainer" class="p-6">
+            <div class="flex items-center justify-center py-12">
+              <div class="loading-spinner mr-3"></div>
+              <span class="text-gray-500">Chargement des alertes LTM...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <!-- Modal Ajouter -->
+  <div id="addModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+    <div class="relative top-16 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-lg bg-white">
+      <div class="ltm-gradient px-6 py-4 rounded-t-lg">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold text-white flex items-center">
+            <i class="fas fa-plus mr-2"></i>Nouvelle Opération de Production LTM
+          </h3>
+          <button onclick="closeModal('addModal')" class="text-white hover:text-red-200">
+            <i class="fas fa-times text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <form id="addForm" class="p-6 space-y-6">
+        <input type="hidden" id="add_id_rapport">
+        <div class="bg-blue-50 border border-blue-200 p-4 rounded-md mb-4">
+          <div class="flex items-center">
+            <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+            <span class="text-sm text-blue-700">ID Rapport: <strong id="displayIdRapport">-</strong></span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-calendar-alt mr-1 text-red-500"></i>Date et heure
+            </label>
+            <input type="datetime-local" id="add_date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+            <p class="text-xs text-gray-500 mt-1"><i class="fas fa-lock mr-1"></i>Cette date restera figée après création.</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-user mr-1 text-red-500"></i>Opérateur *</label>
+            <select id="add_operateur" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner un opérateur</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-industry mr-1 text-red-500"></i>Machine *</label>
+            <select id="add_machine" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner une machine</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-wrench mr-1 text-red-500"></i>Opération *</label>
+            <select id="add_operation" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner une opération</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-cube mr-1 text-red-500"></i>Référence produit *</label>
+            <select id="add_reference" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner une référence</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">Affiche: <code>code_reference - LOT</code>. Sélectionner une référence filtre automatiquement "O. de production".</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-barcode mr-1 text-red-500"></i>O. de production *</label>
+            <select id="add_o_prod" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner un O. de production</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">Affiche: <code>O_PROD - nom_SF</code>. Liste filtrée par la référence sélectionnée.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-users mr-1 text-red-500"></i>Équipe *</label>
+            <select id="add_equipe" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner une équipe</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-hashtag mr-1 text-red-500"></i>Nombre d'opérateurs *</label>
+            <input type="number" id="add_nb_operateurs" min="1" value="1" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-rocket mr-1 text-red-500"></i>N° de lancement *
+            </label>
+            <select id="add_num_lancement" required 
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner un lancement</option>
+              <option value="1ERE LANCEMENT">1ERE LANCEMENT</option>
+              <option value="2EME LANCEMENT">2EME LANCEMENT</option>
+              <option value="3EME LANCEMENT">3EME LANCEMENT</option>
+              <option value="4EME LANCEMENT">4EME LANCEMENT</option>
+              <option value="5EME LANCEMENT">5EME LANCEMENT</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-4 border-t">
+          <button type="button" onclick="closeModal('addModal')" class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"><i class="fas fa-times mr-2"></i>Annuler</button>
+          <button type="submit" class="px-6 py-2 text-sm font-medium ltm-btn-primary rounded-md flex items-center"><i class="fas fa-plus mr-2"></i>Créer l'Opération</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Authentification -->
+  <div id="authModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+    <div class="relative top-1/3 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
+      <div class="ltm-gradient px-6 py-4 rounded-t-lg">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold text-white flex items-center"><i class="fas fa-lock mr-2"></i>Authentification LTM</h3>
+          <button onclick="closeModal('authModal')" class="text-white hover:text-red-200"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+      <div class="p-6">
+        <div class="mb-4">
+          <p class="text-sm text-gray-600">Veuillez saisir votre mot de passe pour modifier cette entrée :</p>
+          <p class="text-sm font-medium text-gray-900 mt-2" id="authOperatorName"></p>
+        </div>
+        <form id="authForm" class="space-y-4">
+          <input type="hidden" id="auth_entry_id">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
+            <input type="password" id="auth_password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm" placeholder="Saisissez votre mot de passe">
+          </div>
+          <div id="authError" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded" role="alert">
+            <span class="block sm:inline">Mot de passe incorrect</span>
+          </div>
+          <div class="flex justify-end space-x-3 pt-4 border-t">
+            <button type="button" onclick="closeModal('authModal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md">Annuler</button>
+            <button type="submit" class="px-4 py-2 text-sm font-medium ltm-btn-primary rounded-md flex items-center"><i class="fas fa-unlock mr-2"></i> Authentifier</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Modifier -->
+  <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+    <div class="relative top-8 mx-auto p-5 border w-full max-w-5xl shadow-lg rounded-lg bg-white">
+      <div class="ltm-gradient px-6 py-4 rounded-t-lg">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold text-white flex items-center"><i class="fas fa-edit mr-2"></i>Modifier l'Opération LTM</h3>
+          <button onclick="closeModal('editModal')" class="text-white hover:text-red-200"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+
+      <form id="editForm" class="p-6 space-y-6">
+        <input type="hidden" id="edit_id">
+        <input type="hidden" id="edit_id_rapport">
+
+        <div class="creation-info-section">
+          <div class="creation-info-title"><i class="fas fa-info-circle mr-2"></i>Informations de création de l'opération</div>
+          <div class="creation-info-grid">
+            <div class="creation-info-item"><div class="creation-info-label">ID Opération:</div><div class="creation-info-value" id="edit_info_id">—</div></div>
+            <div class="creation-info-item"><div class="creation-info-label">ID Rapport:</div><div class="creation-info-value" id="edit_info_id_rapport">—</div></div>
+            <div class="creation-info-item"><div class="creation-info-label">Date de création:</div><div class="creation-info-value" id="edit_info_date_creation">—</div></div>
+            <div class="creation-info-item"><div class="creation-info-label">Validé par:</div><div class="creation-info-value" id="edit_info_valideur">—</div></div>
+          </div>
+        </div>
+
+        <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
+          <div class="flex items-center"><i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+            <div class="text-sm text-yellow-700">La modification d'une entrée sera tracée dans le journal d'audit LTM.</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-user mr-1 text-red-500"></i>Opérateur</label>
+            <select id="edit_operateur" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner un opérateur</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-lock mr-1 text-gray-400"></i>Date et heure de création (figée)</label>
+            <input type="datetime-local" id="edit_date" disabled class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 sm:text-sm">
+            <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle mr-1"></i>La date de création ne peut pas être modifiée</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-industry mr-1 text-red-500"></i>Machine</label>
+            <select id="edit_machine" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner une machine</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-wrench mr-1 text-red-500"></i>Opération</label>
+            <select id="edit_operation" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner une opération</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-cube mr-1 text-red-500"></i>Référence</label>
+            <select id="edit_reference" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner une référence</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-barcode mr-1 text-red-500"></i>N° de lot</label>
+            <input type="text" id="edit_lot" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-users mr-1 text-red-500"></i>Équipe</label>
+            <select id="edit_equipe" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner une équipe</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-hashtag mr-1 text-red-500"></i>Nombre d'opérateurs</label>
+            <input type="number" id="edit_nb_operateurs" min="1" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-check-circle mr-1 text-green-500"></i>Quantité bonne</label>
+            <input type="number" id="edit_qte_bonne" min="0" value="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-times-circle mr-1 text-red-500"></i>Quantité rebutée</label>
+            <input type="number" id="edit_qte_rebut" min="0" value="0" onchange="toggleMotifRebut()" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+          </div>
+          <div id="motifRebutContainer">
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-exclamation-circle mr-1 text-red-500"></i>Motif de rebut</label>
+            <select id="edit_motif_rebut" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="">Sélectionner un motif</option>
+            </select>
+            <p class="text-xs text-red-600 mt-1 hidden" id="motifRequiredMsg">Motif obligatoire si quantité rebutée > 0</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-info-circle mr-1 text-red-500"></i>Statut</label>
+            <select id="edit_statut" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm">
+              <option value="En cours">En cours</option>
+              <option value="Clôturé">Clôturé</option>
+              <option value="En attente">En attente</option>
+              <option value="Suspendu">Suspendu</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-comment mr-1 text-red-500"></i>Commentaires</label>
+          <textarea id="edit_commentaires" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 sm:text-sm" placeholder="Commentaires sur l'opération..."></textarea>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-4 border-t">
+          <button type="button" onclick="closeModal('editModal')" class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"><i class="fas fa-times mr-2"></i>Annuler</button>
+          <button type="submit" class="px-6 py-2 text-sm font-medium ltm-btn-primary rounded-md flex items-center"><i class="fas fa-save mr-2"></i>Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // Configuration LTM (inclut O_PROD + ALERTES_SAUTS)
+    // =========================
+    const CONFIG = {
+      API_BASE_URL: 'https://worthy-hopefully-bedbug.ngrok-free.app/webhook',
+      SHEETS_BASE_URL: 'https://docs.google.com/spreadsheets/d/1VX0pfEKYHsPwlFPAhXdxrYSxzOQXCP3iYeBeTzTMvBI/gviz/tq?tqx=out:csv&sheet=',
+      SHEETS: {
+        JOURNAL: 'JOURNAL',
+        USERS: 'users',
+        EQUIPES: 'equipes',
+        MACHINES: 'machines',
+        OPERATIONS: 'operations',
+        REFERENCES: 'references',
+        MOTIFS: 'motifs',
+        AUDITS: 'audits',
+        SUIVI_MACHINES: 'Suivi des machines',
+        O_PROD: 'O_PROD',
+        ALERTES_SAUTS: 'Alertes & Sauts'
+      }
+    };
+
+    // =========================
+    // Générateur ID unique
+    // =========================
+    function generateUniqueId() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < 22; i++) { result += chars.charAt(Math.floor(Math.random() * chars.length)); }
+      return result;
+    }
+
+    // =========================
+    // Helpers
+    // =========================
+    function cleanStr(v){return String(v ?? '').replace(/\uFEFF/g,'').trim()}
+    function extractIdMaybeLabeled(v){const s=cleanStr(v);const m=s.match(/^([^-\u2013\u2014]+)[-\u2013\u2014]/);return m?cleanStr(m[1]):s}
+    function normId(v){return cleanStr(v).replace(/\s+/g,'').toUpperCase()}
+    function toDatetimeLocal(str){if(!str)return'';if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(str))return str.slice(0,16);return str.replace(' ','T').slice(0,16)}
+    function fromDatetimeLocal(str){return (str||'').replace('T',' ')}
+    function formatDate(dateStr){if(!dateStr)return'—';const d=new Date(dateStr);if(isNaN(d))return dateStr;return d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+    function parseCSV(text){const lines=text.replace(/\r/g,'').split('\n');const result=[];for(const line of lines){if(line.trim()==='')continue;const row=[];let current='';let inQ=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(inQ&&line[i+1]==='"'){current+='"';i++;}else{inQ=!inQ}}else if(c===','&&!inQ){row.push(current);current='';}else{current+=c}}row.push(current);result.push(row)}return result}
+// === Helpers (à coller une seule fois) ===========================
+function excelSerialToDate(n){
+  const EPOCH = Date.UTC(1899, 11, 30); // 1899-12-30
+  return new Date(EPOCH + Number(n) * 86400000);
+}
+
+function parseDateLTM(v){
+  if (v == null || v === '') return null;
+
+  // Excel serial (nombre)
+  if (typeof v === 'number' || (/^\d+(\.\d+)?$/.test(String(v).trim()))) {
+    const d = excelSerialToDate(Number(v));
+    return isNaN(d) ? null : d;
+  }
+
+  const s = String(v).trim();
+
+  // dd/mm/yyyy [HH:MM[:SS]]
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (m){
+    const [, dd, mm, yyyy, HH='0', MM='0', SS='0'] = m;
+    const d = new Date(Number(yyyy), Number(mm)-1, Number(dd), Number(HH), Number(MM), Number(SS));
+    return isNaN(d) ? null : d;
+  }
+
+  // ISO / RFC / yyyy-mm-dd...
+  const d2 = new Date(s.replace(' ', 'T'));
+  return isNaN(d2) ? null : d2;
+}
+
+function sameDayInTZ(d1, d2, tz='Africa/Tunis'){
+  const opt = { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' };
+  return d1.toLocaleDateString('fr-FR', opt) === d2.toLocaleDateString('fr-FR', opt);
+}
+
+
+    // =========================
+    // Fonction d'affichage motif rebut
+    // =========================
+    function displayMotifRebut(motifCode) {
+      if (!motifCode || motifCode.trim() === '') return '—';
+      const motif = referentiels.motifs.find(m => m.code === motifCode);
+      if (motif) {
+        return `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"><i class="fas fa-exclamation-triangle mr-1"></i>${motif.code} - ${motif.libelle}</span>`;
+      }
+      return `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"><i class="fas fa-question-circle mr-1"></i>${motifCode}</span>`;
+    }
+
+    // =========================
+    // Variables globales (inclut oprod + alertes)
+    // =========================
+    let allJournalEntries = [];
+    let filteredEntries = [];
+    let referentiels = { machines: [], operations: [], references: [], equipes: [], users: [], motifs: [], oprod: [] };
+    let suiviMachinesRaw = [];
+    let suiviMachines = [];
+    let pendingMachineFilter = null;
+    let allAlertes = [];
+    let filteredAlertes = [];
+
+    // =========================
+    // Notifications
+    // =========================
+    function showNotification(message,type='info'){
+      const n=document.getElementById('notification');
+      const icon=document.getElementById('notificationIcon');
+      const msg=document.getElementById('notificationMessage');
+      msg.textContent=message;
+      const icons={success:'<i class="fas fa-check-circle text-green-500"></i>',error:'<i class="fas fa-exclamation-circle text-red-500"></i>',warning:'<i class="fas fa-exclamation-triangle text-yellow-500"></i>',info:'<i class="fas fa-info-circle text-blue-500"></i>'};
+      icon.innerHTML=icons[type]||icons.info;
+      n.classList.add('show'); setTimeout(()=>hideNotification(),5000)
+    }
+    function hideNotification(){document.getElementById('notification').classList.remove('show')}
+
+    // =========================
+    // Navigation
+    // =========================
+    function showPage(pageId){
+      document.querySelectorAll('.page-content').forEach(p=>p.classList.add('hidden'));
+      document.getElementById(pageId+'Page').classList.remove('hidden');
+      document.querySelectorAll('.ltm-nav-link').forEach(l=>l.classList.remove('active'));
+      const activeLink=document.querySelector(`a[onclick="showPage('${pageId}')"]`); if(activeLink){activeLink.classList.add('active')}
+      if(pageId==='journal') loadJournal();
+      else if(pageId==='dashboard') loadDashboard();
+      else if(pageId==='referentiels') loadReferentiels();
+      else if(pageId==='suivi') loadSuiviMachines();
+      else if(pageId==='alertes') loadAlertes();
+    }
+
+    // =========================
+    // Modaux
+    // =========================
+    function openModal(id){document.getElementById(id).classList.remove('hidden')}
+    function closeModal(id){document.getElementById(id).classList.add('hidden')}
+
+    // =========================
+    // Chargement référentiels
+    // =========================
+    async function loadUsers(){try{const r=await fetch(CONFIG.SHEETS_BASE_URL+CONFIG.SHEETS.USERS);const t=await r.text();const rows=parseCSV(t);rows.shift();referentiels.users=rows.map(row=>({id:cleanStr(row[0]),nom:cleanStr(row[1]),password:cleanStr(row[2]),role:cleanStr(row[3]),_norm:normId(row[0])}))}catch(e){console.error('users:',e)}}
+    async function loadMachines(){try{const r=await fetch(CONFIG.SHEETS_BASE_URL+CONFIG.SHEETS.MACHINES);const t=await r.text();const rows=parseCSV(t);rows.shift();referentiels.machines=rows.map(row=>({code:cleanStr(row[0]),nom:cleanStr(row[1]),type:cleanStr(row[2])}))}catch(e){console.error('machines:',e)}}
+    async function loadOperations(){try{const r=await fetch(CONFIG.SHEETS_BASE_URL+CONFIG.SHEETS.OPERATIONS);const t=await r.text();const rows=parseCSV(t);rows.shift();referentiels.operations=rows.map(row=>({code:cleanStr(row[0]),libelle:cleanStr(row[1])}))}catch(e){console.error('operations:',e)}}
+    async function loadReferences(){
+      try{
+        const r = await fetch(CONFIG.SHEETS_BASE_URL + CONFIG.SHEETS.REFERENCES);
+        const t = await r.text();
+        const rows = parseCSV(t);
+        const header = rows.shift().map(cleanStr);
+        const idx = Object.fromEntries(header.map((h,i)=>[h.toLowerCase(), i]));
+        referentiels.references = rows.map(row => ({
+          code_reference: cleanStr(row[idx['code_reference']]),
+          lot:            cleanStr(row[idx['lot']])
+        })).filter(r => r.code_reference);
+      }catch(e){ console.error('references:', e) }
+    }
+    async function loadEquipes(){try{const r=await fetch(CONFIG.SHEETS_BASE_URL+CONFIG.SHEETS.EQUIPES);const t=await r.text();const rows=parseCSV(t);rows.shift();referentiels.equipes=rows.map(row=>({code:cleanStr(row[0]),libelle:cleanStr(row[1]),horaire:cleanStr(row[2])}))}catch(e){console.error('equipes:',e)}}
+    async function loadMotifs(){try{const r=await fetch(CONFIG.SHEETS_BASE_URL+CONFIG.SHEETS.MOTIFS);const t=await r.text();const rows=parseCSV(t);rows.shift();referentiels.motifs=rows.map(row=>({code:cleanStr(row[0]),libelle:cleanStr(row[1]),type:cleanStr(row[2])}))}catch(e){console.error('motifs:',e)}}
+    async function loadOProd(){
+      try{
+        const r = await fetch(CONFIG.SHEETS_BASE_URL + CONFIG.SHEETS.O_PROD);
+        const t = await r.text();
+        const rows = parseCSV(t);
+        const header = rows.shift().map(cleanStr);
+        const idx = Object.fromEntries(header.map((h,i)=>[h.toLowerCase(), i]));
+        referentiels.oprod = rows.map(row => ({
+          o_prod:        cleanStr(row[idx['o_prod']]) || cleanStr(row[idx['oprod']]) || cleanStr(row[idx['o_prod']]),
+          nom_sf:        cleanStr(row[idx['nom_sf']]),
+          nom_reference: cleanStr(row[idx['nom_reference']]),
+          lot:           cleanStr(row[idx['lot']])
+        })).filter(x => x.o_prod);
+      }catch(e){ console.error('O_PROD:', e) }
+    }
+
+    async function loadReferentiels(){
+      try{
+        await Promise.all([loadUsers(),loadMachines(),loadOperations(),loadReferences(),loadEquipes(),loadMotifs(),loadOProd()]);
+        populateSelects();
+      }catch(e){console.error('Erreur référentiels:',e);showNotification('Erreur lors du chargement des référentiels LTM','error')}
+    }
+
+    function populateSelects(){
+      ['add_operateur','edit_operateur'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='<option value="">Sélectionner un opérateur</option>';referentiels.users.forEach(u=>s.innerHTML+=`<option value="${u.id}">${u.id} - ${u.nom}</option>`);});
+      ['add_machine','edit_machine'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='<option value="">Sélectionner une machine</option>';referentiels.machines.forEach(m=>s.innerHTML+=`<option value="${m.code}">${m.code} - ${m.nom}</option>`);});
+      ['add_operation','edit_operation'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='<option value="">Sélectionner une opération</option>';referentiels.operations.forEach(o=>s.innerHTML+=`<option value="${o.code}">${o.code} - ${o.libelle}</option>`);});
+      ['add_equipe','edit_equipe'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='<option value="">Sélectionner une équipe</option>';referentiels.equipes.forEach(e=>s.innerHTML+=`<option value="${e.code}">${e.code} - ${e.libelle}</option>`);});
+
+      // Références: value = "code|lot", label = "code - lot"
+      ['add_reference','edit_reference'].forEach(id=>{
+        const s=document.getElementById(id); if(!s) return;
+        s.innerHTML='<option value="">Sélectionner une référence</option>';
+        referentiels.references.forEach(r=>{
+          const val = `${r.code_reference}|${r.lot}`;
+          const txt = `${r.code_reference} - ${r.lot}`;
+          s.innerHTML += `<option value="${val}">${txt}</option>`;
+        });
+      });
+
+      // O. de production (sera filtré dynamiquement)
+      const selO=document.getElementById('add_o_prod');
+      if(selO){ selO.innerHTML='<option value="">Sélectionner un O. de production</option>'; }
+
+      // Motifs de rebut - AMÉLIORATION : assurer que les options sont bien disponibles
+      const motifSelect=document.getElementById('edit_motif_rebut'); 
+      if(motifSelect){
+        motifSelect.innerHTML='<option value="">Sélectionner un motif</option>';
+        referentiels.motifs.forEach(m=>motifSelect.innerHTML+=`<option value="${m.code}">${m.code} - ${m.libelle}</option>`);
+      }
+    }
+
+    // =========================
+    // Add Modal (référence -> filtre O_PROD)
+    // =========================
+    function getSelectedRefCodeLot(){
+      const v=(document.getElementById('add_reference')?.value||'');
+      if(!v) return { code:'', lot:'' };
+      const [code, lot] = v.split('|');
+      return { code: code||'', lot: lot||'' };
+    }
+    function refreshOProdOptions(){
+      const { code, lot } = getSelectedRefCodeLot();
+      const s=document.getElementById('add_o_prod'); if(!s) return;
+      s.innerHTML='<option value="">Sélectionner un O. de production</option>';
+      if(!code||!lot) return;
+      const rows = referentiels.oprod.filter(x=> x.nom_reference===code && x.lot===lot );
+      rows.forEach(x=>{
+        const label = `${x.o_prod} - ${x.nom_sf}`;
+        const value = JSON.stringify({ o_prod:x.o_prod, nom_sf:x.nom_sf, lot:x.lot });
+        s.innerHTML += `<option value='${value}'>${label}</option>`;
+      });
+    }
+
+    async function openAddModal(){
+      await loadReferentiels();
+      const now=new Date(); const pad=n=>String(n).padStart(2,'0');
+      document.getElementById('addForm').reset();
+      document.getElementById('add_date').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const idRapport = generateUniqueId();
+      document.getElementById('add_id_rapport').value = idRapport;
+      document.getElementById('displayIdRapport').textContent = idRapport;
+      const refSel=document.getElementById('add_reference'); if(refSel){ refSel.onchange=refreshOProdOptions; }
+      refreshOProdOptions();
+      openModal('addModal');
+    }
+
+    // =========================
+    // Journal : chargement & rendu
+    // =========================
+    async function loadJournal(){
+      try{
+        const resp=await fetch(CONFIG.SHEETS_BASE_URL+CONFIG.SHEETS.JOURNAL);
+        if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const text=await resp.text(); const rows=parseCSV(text);
+        if(!rows.length){document.getElementById('journalTableBody').innerHTML='<tr><td colspan="14" class="px-6 py-4 text-center text-gray-500">Aucune donnée de production LTM disponible</td></tr>';return}
+        const header=rows.shift().map(h=>cleanStr(h));
+        const idx=Object.fromEntries(header.map((h,i)=>[h,i]));
+        const hasSQLSchema=('id' in idx)&&('date_heure' in idx)&&('machine_id' in idx)&&('operation_id' in idx)&&('reference_id' in idx)&&('numero_lot' in idx)&&('equipe_id' in idx)&&('operateur_id' in idx)&&('quantite_bonne' in idx)&&('quantite_rebut' in idx)&&('statut' in idx);
+        const get=(cols,name,dflt='')=>(name in idx?cleanStr(cols[idx[name]]):dflt);
+        allJournalEntries=rows.map((cols,i)=>{
+          let e; if(hasSQLSchema){ const opIdRaw=extractIdMaybeLabeled(get(cols,'operateur_id')); e={ id:parseInt(get(cols,'id')||'0')||undefined, id_rapport:get(cols,'id_rapport')||'', date_heure:get(cols,'date_heure'), operateur:opIdRaw, machine:get(cols,'machine_id'), operation:get(cols,'operation_id'), reference:get(cols,'reference_id'), numero_lot:get(cols,'numero_lot'), equipe:get(cols,'equipe_id'), nb_operateurs:parseInt(get(cols,'nb_operateurs')||'1')||1, quantite_bonne:parseInt(get(cols,'quantite_bonne')||'0')||0, quantite_rebut:parseInt(get(cols,'quantite_rebut')||'0')||0, motif_rebut:get(cols,'motif_rebut_id')||'', statut:get(cols,'statut')||'En cours', commentaires:get(cols,'commentaires')||'', valideur_id:get(cols,'valideur_id')||'', date_validation:get(cols,'date_validation')||'' } }
+          else{ const opIdRaw=extractIdMaybeLabeled(get(cols,'operateur')||cols[1]||''); e={ id:undefined, id_rapport:get(cols,'id_rapport')||'', date_heure:get(cols,'date')||get(cols,'date_heure')||cols[0]||'', operateur:opIdRaw, machine:get(cols,'machine')||cols[2]||'', operation:get(cols,'operation')||cols[3]||'', reference:get(cols,'reference')||cols[4]||'', numero_lot:get(cols,'numero_lot')||get(cols,'lot')||cols[5]||'', equipe:get(cols,'equipe')||cols[6]||'', nb_operateurs:parseInt(get(cols,'nb_operateurs')||cols[7]||'1')||1, quantite_bonne:parseInt(get(cols,'quantite_bonne')||cols[8]||'0')||0, quantite_rebut:parseInt(get(cols,'quantite_rebut')||cols[9]||'0')||0, motif_rebut:get(cols,'motif_rebut')||cols[10]||'', statut:get(cols,'statut')||cols[11]||'En cours', commentaires:get(cols,'commentaires')||'', valideur_id:get(cols,'valideur_id')||'', date_validation:get(cols,'date_validation')||'' } }
+          return {...e,_operateurNorm:normId(e.operateur),_rowId:e.id??(i+1)};
+        });
+        loadFilterOptions();
+        applyFilters();
+        showNotification('Journal de production LTM chargé avec succès','success');
+      }catch(error){console.error('Erreur journal:',error);showNotification('Erreur lors du chargement du journal LTM: '+error.message,'error');document.getElementById('journalTableBody').innerHTML='<tr><td colspan="14" class="px-6 py-4 text-center text-red-500">Erreur de chargement des données LTM</td></tr>';}
+    }
+
+    function loadFilterOptions(){
+      const machines=[...new Set(allJournalEntries.map(e=>e.machine).filter(Boolean))];
+      const equipes=[...new Set(allJournalEntries.map(e=>e.equipe).filter(Boolean))];
+      const machineSelect=document.getElementById('filterMachine');
+      const equipeSelect=document.getElementById('filterEquipe');
+      machineSelect.innerHTML='<option value="">Toutes les machines</option>';
+      equipeSelect.innerHTML='<option value="">Toutes les équipes</option>';
+      machines.forEach(m=>machineSelect.innerHTML+=`<option value="${m}">${m}</option>`);
+      equipes.forEach(eq=>equipeSelect.innerHTML+=`<option value="${eq}">${eq}</option>`);
+
+      if(pendingMachineFilter){
+        if(machines.includes(pendingMachineFilter)){
+          machineSelect.value=pendingMachineFilter;
+          pendingMachineFilter=null; applyFilters();
+          showNotification('Filtre appliqué sur la machine : '+machineSelect.value,'info');
+        }
+      }
+    }
+
+    function applyFilters(){
+      const period=document.getElementById('filterPeriod').value;
+      const machine=document.getElementById('filterMachine').value;
+      const equipe=document.getElementById('filterEquipe').value;
+      const statut=document.getElementById('filterStatut').value;
+      filteredEntries=allJournalEntries.filter(entry=>{
+        if(period!=='all'){
+          const dateStr = entry.date_heure; if(!dateStr) return false;
+          let d; if (dateStr.includes('/')) { const parts = dateStr.split(/[\s\/]+/); if(parts.length >= 3) { d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); if(isNaN(d)) { d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`); } } } else { d = new Date(dateStr); }
+          if(isNaN(d)) return false;
+          const now = new Date();
+          if(period==='today' && d.toDateString() !== now.toDateString()) return false;
+          if(period==='week' && d < new Date(now.getTime() - 7*24*60*60*1000)) return false;
+          if(period==='month' && d < new Date(now.getFullYear(), now.getMonth()-1, now.getDate())) return false;
+        }
+        if(machine && entry.machine!==machine) return false;
+        if(equipe && entry.equipe!==equipe) return false;
+        if(statut && entry.statut!==statut) return false;
+        return true;
+      });
+      renderJournalTable();
+    }
+
+    function getStatutBadge(statut){
+      const badges={'En cours':'<span class="badge badge-blue"><i class="fas fa-play mr-1"></i>En cours</span>','Clôturé':'<span class="badge badge-green"><i class="fas fa-check mr-1"></i>Clôturé</span>','En attente':'<span class="badge badge-yellow"><i class="fas fa-pause mr-1"></i>En attente</span>','Suspendu':'<span class="badge badge-red"><i class="fas fa-stop mr-1"></i>Suspendu</span>'};
+      return badges[statut]||`<span class="badge badge-blue">${statut}</span>`;
+    }
+    function displayOperator(operateurId){const norm=normId(extractIdMaybeLabeled(operateurId));const u=referentiels.users.find(x=>x._norm===norm);return u?`${u.id} - ${u.nom}`:(cleanStr(operateurId)||'—')}
+    function renderJournalTable(){
+      const tbody=document.getElementById('journalTableBody');
+      if(!filteredEntries.length){tbody.innerHTML='<tr><td colspan="14" class="px-6 py-4 text-center text-gray-500"><i class="fas fa-search mr-2"></i>Aucune opération LTM trouvée</td></tr>';return}
+      tbody.innerHTML=filteredEntries.map(entry=>`
+        <tr class="fade-in row-hover">
+          <td class="px-6 py-4 text-sm text-gray-700 font-mono">${entry.id_rapport || '—'}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">${formatDate(entry.date_heure)}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">${displayOperator(entry.operateur)}</td>
+          <td class="px-6 py-4 text-sm text-gray-700 font-medium">${entry.machine}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">${entry.operation}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">${entry.reference}</td>
+          <td class="px-6 py-4 text-sm text-gray-700 font-mono">${entry.numero_lot}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">${entry.equipe}</td>
+          <td class="px-6 py-4 text-sm text-gray-700 text-center">${entry.nb_operateurs ?? '—'}</td>
+          <td class="px-6 py-4 text-sm text-gray-700 font-bold text-green-600">${entry.quantite_bonne}</td>
+          <td class="px-6 py-4 text-sm text-gray-700 ${entry.quantite_rebut>0?'text-red-600 font-bold':'text-gray-400'}">${entry.quantite_rebut}</td>
+          <td class="px-6 py-4 text-sm">${displayMotifRebut(entry.motif_rebut)}</td>
+          <td class="px-6 py-4 text-sm">${getStatutBadge(entry.statut)}</td>
+          <td class="px-6 py-4 text-sm font-medium">
+            <button onclick="editEntry('${String(entry._rowId).replace(/\"/g,'&quot;')}')" class="text-red-600 hover:text-red-800 mr-2 transition-colors" title="Modifier l'opération"><i class="fas fa-edit"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // =========================
+    // COULEURS + CARTES SUIVI
+    // =========================
+    function getPhaseClass(phase) {
+      if (!phase) return 'phase-default';
+      const phaseNorm = phase.toString().toLowerCase().trim();
+      if (["execution","production","marche","en marche"].includes(phaseNorm)) return 'phase-execution';
+      if (["reglage","réglage","réglages"].includes(phaseNorm)) return 'phase-reglage';
+      if (["arret non planifie","arrêt non planifié"].includes(phaseNorm)) return 'phase-arret-non-planifie';
+      if (["arret planifie","arrêt planifié"].includes(phaseNorm)) return 'phase-arret-planifie';
+      if (["arret","arrêt"].includes(phaseNorm)) return 'phase-arret';
+      return 'phase-default';
+    }
+
+    function renderMachineCard(machine) {
+      const phaseClass = getPhaseClass(machine.phase);
+      const p = (machine.phase||'').toLowerCase();
+      const isArret = p.includes('arret') || p.includes('arrêt');
+
+      if (isArret) {
+        return `
+          <div class="machine-arret px-4 py-3 rounded-lg hover:bg-gray-200 transition-colors click-card"
+               onclick="goToJournalWithMachine('${String(machine.machine).replace(/\"/g,'&quot;')}')"
+               title="Voir le journal filtré : ${machine.machine}">
+            <div class="machine-name text-center">
+              ${machine.machine || '—'}
+            </div>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors flex items-center justify-between click-card"
+               onclick="goToJournalWithMachine('${String(machine.machine).replace(/\"/g,'&quot;')}')"
+               title="Voir le journal filtré : ${machine.machine}">
+            <div>
+              <div class="font-semibold text-gray-900">${machine.machine || '—'}</div>
+              <div class="text-sm text-gray-600 flex items-center">
+                <span class="inline-block w-2.5 h-2.5 rounded-full mr-2 ${phaseClass}"></span>
+                ${machine.phase || '—'}
+                ${machine.operation ? `<span class="mx-2 text-gray-400">•</span><span class="text-gray-700">${machine.operation}</span>` : ''}
+                ${machine.lot ? `<span class="mx-2 text-gray-400">•</span><span class="text-gray-700">Lot ${machine.lot}</span>` : ''}
+              </div>
+              ${machine.reference ? `<div class="text-xs text-blue-600 mt-1"><i class="fas fa-cube mr-1"></i>Référence: ${machine.reference}</div>` : ''}
+              ${machine.cause ? `<div class="text-xs text-gray-500 mt-1"><i class="fas fa-exclamation-circle mr-1"></i>${machine.cause}</div>` : ''}
+            </div>
+            <div class="text-right">
+              ${machine.compteur != null ? `<div class="text-xs text-gray-500">Compteur</div><div class="text-sm font-semibold">${machine.compteur}</div>` : ''}
+              ${machine.horodatage ? `<div class="text-[11px] text-gray-400 mt-1">${formatDate(machine.horodatage)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // =========================
+    // Suivi machines
+    // =========================
+    function safeInt(v){const n=parseInt(String(v||'').replace(/\D+/g,''));return isNaN(n)?undefined:n}
+
+    async function loadSuiviMachines(){
+      try{
+        const url=CONFIG.SHEETS_BASE_URL+encodeURIComponent(CONFIG.SHEETS.SUIVI_MACHINES);
+        const resp=await fetch(url); if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const csv=await resp.text(); const rows=parseCSV(csv);
+        if(!rows.length){
+          suiviMachinesRaw=[];suiviMachines=[];
+          renderSuiviMachines();
+          showNotification('Aucune donnée dans "Suivi des machines".','warning');
+          return;
+        }
+        const header=rows.shift().map(cleanStr);
+        const idx=Object.fromEntries(header.map((h,i)=>[h.toLowerCase(),i]));
+        const get=(cols,name)=>cols[idx[name.toLowerCase()]]??'';
+
+        const items=rows.filter(r=>r&&r.length).map(cols=>({
+          secteur:cleanStr(get(cols,'secteur')),
+          machine:cleanStr(get(cols,'machine')),
+          phase:cleanStr(get(cols,'phase')),
+          reference:cleanStr(get(cols,'reference')),
+          horodatage:cleanStr(get(cols,'horodatage')),
+          lot:cleanStr(get(cols,'n° lot')) || cleanStr(get(cols,'n°lot')) || cleanStr(get(cols,'lot')),
+          operation:cleanStr(get(cols,'operation')) || cleanStr(get(cols,'opération')),
+          cause:cleanStr(get(cols,'cause')),
+          compteur:safeInt(get(cols,'compteur')),
+        }));
+
+        const latestByMachine=new Map();
+        for(const it of items){
+          const key=it.machine||'—';
+          const prev=latestByMachine.get(key);
+          const t=Date.parse(it.horodatage||'')||-Infinity;
+          const tp=prev?(Date.parse(prev.horodatage||'')||-Infinity):-Infinity;
+          if(!prev||t>=tp) latestByMachine.set(key,it);
+        }
+
+        suiviMachinesRaw=items;
+        suiviMachines=Array.from(latestByMachine.values());
+        hydrateSuiviFilters();
+        renderSuiviMachines();
+        showNotification('Suivi des machines chargé.','success');
+      }catch(e){
+        console.error('Suivi machines:',e);
+        showNotification('Erreur de chargement du suivi des machines : '+e.message,'error');
+        document.getElementById('suiviContainer').innerHTML='<div class="text-center text-red-600">Erreur de chargement</div>';
+      }
+    }
+
+    function hydrateSuiviFilters(){
+      const selSect=document.getElementById('suiviFilterSecteur'); if(!selSect) return;
+      const secteurs=[...new Set(suiviMachines.map(x=>x.secteur).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+      const current=selSect.value;
+      selSect.innerHTML='<option value="">Tous les secteurs</option>'+secteurs.map(s=>`<option>${s}</option>`).join('');
+      if(secteurs.includes(current)) selSect.value=current;
+    }
+
+    function goToJournalWithMachine(machineCode){
+      pendingMachineFilter = machineCode;
+      showPage('journal');
+      const machineSelect=document.getElementById('filterMachine');
+      if(machineSelect && [...machineSelect.options].some(o=>o.value===machineCode)){
+        machineSelect.value=machineCode;
+        applyFilters();
+        pendingMachineFilter=null;
+      }
+    }
+
+    function renderSuiviMachines(){
+      const container=document.getElementById('suiviContainer'); if(!container) return;
+      const q=(document.getElementById('suiviSearch')?.value||'').toLowerCase();
+      const fSect=document.getElementById('suiviFilterSecteur')?.value||'';
+      const fPhase=document.getElementById('suiviFilterPhase')?.value||'';
+
+      const data=suiviMachines.filter(it=>{
+        if(fSect && it.secteur!==fSect) return false;
+        if(fPhase && it.phase!==fPhase) return false;
+        if(q){
+          const blob=`${it.machine} ${it.phase} ${it.reference} ${it.lot} ${it.operation} ${it.cause}`.toLowerCase();
+          if(!blob.includes(q)) return false;
+        }
+        return true;
+      });
+
+      if(!data.length){
+        container.innerHTML=`<div class="bg-white p-8 rounded-lg border text-center text-gray-500"><i class="fas fa-search mr-2"></i>Aucune machine trouvée avec ces critères</div>`;
+        return;
+      }
+
+      const bySecteur=new Map();
+      for(const it of data){const s=it.secteur||'Autres'; if(!bySecteur.has(s)) bySecteur.set(s,[]); bySecteur.get(s).push(it)}
+      const secteursOrd=[...bySecteur.keys()].sort((a,b)=>a.localeCompare(b,'fr'));
+
+      container.innerHTML=secteursOrd.map(sect=>{
+        const list=bySecteur.get(sect).sort((a,b)=>a.machine.localeCompare(b.machine,'fr'));
+        const items=list.map(it=>renderMachineCard(it)).join('');
+        return `<section><h2 class="text-lg font-bold text-gray-800 mb-3">${sect}</h2><div class="space-y-2">${items}</div></section>`;
+      }).join('');
+    }
+
+    // =========================
+    // Alertes & Sauts - AMÉLIORÉ
+    // =========================
+    async function loadAlertes() {
+      try {
+        const resp = await fetch(CONFIG.SHEETS_BASE_URL + encodeURIComponent(CONFIG.SHEETS.ALERTES_SAUTS));
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const text = await resp.text();
+        const rows = parseCSV(text);
+        
+        if (!rows.length) {
+          allAlertes = [];
+          renderAlertes();
+          showNotification('Aucune donnée d\'alertes disponible', 'warning');
+          return;
+        }
+
+        const header = rows.shift().map(cleanStr);
+        const idx = Object.fromEntries(header.map((h, i) => [h.toLowerCase(), i]));
+        
+        // AMÉLIORATION : Lecture plus robuste des colonnes détails
+        allAlertes = rows.map((row, index) => {
+          const reference = cleanStr(row[idx['référence']] || row[idx['reference']] || '');
+          const details = cleanStr(
+            row[idx['détails']] || 
+            row[idx['details']] || 
+            row[idx['detail']] || 
+            row[idx['détail']] || 
+            ''
+          );
+          
+          // Vérifier si l'alerte a du contenu
+          if (!reference && !details) return null;
+          
+          return {
+            reference: reference,
+            details: details,
+            priorite: determinePriorite(details),
+            date_creation: new Date().toISOString(),
+            // Nouveau : ID unique pour chaque alerte
+            id: `alert_${index}_${Date.now()}`
+          };
+        }).filter(alerte => alerte !== null); // Filtrer les alertes vides
+
+        filteredAlertes = [...allAlertes];
+        renderAlertes();
+        showNotification(`${allAlertes.length} alertes LTM chargées avec succès`, 'success');
+      } catch (error) {
+        console.error('Erreur alertes:', error);
+        showNotification('Erreur lors du chargement des alertes: ' + error.message, 'error');
+        document.getElementById('alertesContainer').innerHTML = '<div class="text-center text-red-600 py-8"><i class="fas fa-exclamation-triangle mb-2 text-2xl"></i><br>Erreur de chargement des alertes</div>';
+      }
+    }
+
+    function determinePriorite(details) {
+      const text = details.toLowerCase();
+      if (text.includes('critique') || text.includes('arrêt') || text.includes('panne') || text.includes('urgent') || text.includes('danger')) {
+        return 'high';
+      } else if (text.includes('attention') || text.includes('surveillance') || text.includes('contrôle') || text.includes('important')) {
+        return 'medium';
+      }
+      return 'low';
+    }
+
+    function filterAlertes() {
+      const search = (document.getElementById('alertesSearch')?.value || '').toLowerCase();
+      const priorite = document.getElementById('alertesPriorite')?.value || '';
+
+      filteredAlertes = allAlertes.filter(alerte => {
+        if (search && !alerte.reference.toLowerCase().includes(search) && !alerte.details.toLowerCase().includes(search)) {
+          return false;
+        }
+        if (priorite && alerte.priorite !== priorite) {
+          return false;
+        }
+        return true;
+      });
+
+      renderAlertes();
+    }
+
+    // AMÉLIORATION MAJEURE : Affichage complet des détails des alertes
+    function renderAlertes() {
+      const container = document.getElementById('alertesContainer');
+      
+      if (!filteredAlertes.length) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-search text-4xl mb-4 text-gray-300"></i>
+            <p class="text-lg font-medium">Aucune alerte trouvée</p>
+            <p class="text-sm">Essayez de modifier vos critères de recherche ou vérifiez les données du sheet "Alertes & Sauts"</p>
+          </div>
+        `;
+        return;
+      }
+
+      const alertesHtml = filteredAlertes.map(alerte => {
+        const prioriteClass = `alert-${alerte.priorite}`;
+        const prioriteIcon = alerte.priorite === 'high' ? 'fa-exclamation-triangle' : 
+                           alerte.priorite === 'medium' ? 'fa-exclamation-circle' : 'fa-info-circle';
+        const prioriteColor = alerte.priorite === 'high' ? 'text-red-600' : 
+                            alerte.priorite === 'medium' ? 'text-yellow-600' : 'text-green-600';
+        const prioriteBgColor = alerte.priorite === 'high' ? 'bg-red-100' : 
+                              alerte.priorite === 'medium' ? 'bg-yellow-100' : 'bg-green-100';
+        const prioriteText = alerte.priorite === 'high' ? 'Élevée' : 
+                           alerte.priorite === 'medium' ? 'Moyenne' : 'Faible';
+
+        return `
+          <div class="alert-card bg-white rounded-lg shadow-sm border ${prioriteClass} p-6 mb-4">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center mb-3">
+                  <i class="fas ${prioriteIcon} ${prioriteColor} text-lg mr-3"></i>
+                  <h3 class="text-lg font-semibold text-gray-900 flex-1">
+                    ${alerte.reference || 'Alerte générale'}
+                  </h3>
+                  <span class="ml-4 px-3 py-1 text-xs font-medium rounded-full ${prioriteColor} ${prioriteBgColor}">
+                    ${prioriteText}
+                  </span>
+                </div>
+                
+                <!-- AMÉLIORATION : Affichage détaillé des détails -->
+                ${alerte.details ? `
+                  <div class="alert-details">
+                    <h4 class="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                      <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                      Détails de l'alerte
+                    </h4>
+                    <p class="text-gray-700 leading-relaxed">${alerte.details}</p>
+                  </div>
+                ` : ''}
+                
+                <div class="mt-4 flex items-center justify-between">
+                  <div class="flex items-center text-sm text-gray-500">
+                    <i class="fas fa-clock mr-1"></i>
+                    <span>Créé le ${formatDate(alerte.date_creation)}</span>
+                  </div>
+                  
+                  <!-- AMÉLIORATION : Actions sur les alertes -->
+                  <div class="flex space-x-2">
+                    <button class="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors" 
+                            onclick="markAlertAsRead('${alerte.id}')" title="Marquer comme lu">
+                      <i class="fas fa-check mr-1"></i>Lu
+                    </button>
+                    <button class="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors" 
+                            onclick="copyAlertDetails('${alerte.id}')" title="Copier les détails">
+                      <i class="fas fa-copy mr-1"></i>Copier
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = alertesHtml;
+    }
+
+    // NOUVELLES FONCTIONS pour les actions sur les alertes
+    function markAlertAsRead(alertId) {
+      const alertIndex = allAlertes.findIndex(a => a.id === alertId);
+      if (alertIndex !== -1) {
+        allAlertes[alertIndex].read = true;
+        showNotification('Alerte marquée comme lue', 'success');
+        renderAlertes();
+      }
+    }
+
+    function copyAlertDetails(alertId) {
+      const alerte = allAlertes.find(a => a.id === alertId);
+      if (alerte) {
+        const textToCopy = `Référence: ${alerte.reference || 'N/A'}\nDétails: ${alerte.details || 'N/A'}`;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          showNotification('Détails de l\'alerte copiés dans le presse-papiers', 'success');
+        }).catch(err => {
+          console.error('Erreur lors de la copie:', err);
+          showNotification('Erreur lors de la copie', 'error');
+        });
+      }
+    }
+
+    // =========================
+    // Auth & Edition - CORRECTION MOTIF REBUT
+    // =========================
+    function editEntry(rowId){
+      const entry=allJournalEntries.find(e=>String(e._rowId)===String(rowId)); if(!entry)return;
+      const norm=normId(extractIdMaybeLabeled(entry.operateur));
+      let user=referentiels.users.find(u=>u._norm===norm);
+      if(!user){
+        loadReferentiels().then(()=>{
+          user=referentiels.users.find(u=>u._norm===norm);
+          if(!user){
+            showNotification('Utilisateur LTM non trouvé pour cette entrée (ID opérateur: '+entry.operateur+')','error');return
+          }
+          proceedAuth(rowId,user)
+        }).catch(()=>{showNotification('Utilisateur LTM non trouvé pour cette entrée (ID opérateur: '+entry.operateur+')','error')});
+        return;
+      }
+      proceedAuth(rowId,user);
+    }
+    function proceedAuth(rowId,user){
+      document.getElementById('auth_entry_id').value=String(rowId);
+      document.getElementById('authOperatorName').textContent=`${user.id} - ${user.nom}`;
+      document.getElementById('auth_password').value='';
+      document.getElementById('authError').classList.add('hidden');
+      openModal('authModal');
+    }
+    document.getElementById('authForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const rowId=document.getElementById('auth_entry_id').value;
+      const password=document.getElementById('auth_password').value;
+      const entry=allJournalEntries.find(e=>String(e._rowId)===String(rowId)); if(!entry)return;
+      const norm=normId(extractIdMaybeLabeled(entry.operateur));
+      const user=referentiels.users.find(u=>u._norm===norm);
+      if(!user||user.password!==cleanStr(password)){
+        document.getElementById('authError').classList.remove('hidden');return
+      }
+      closeModal('authModal');
+      await openEditModal(entry);
+    });
+
+    // AMÉLIORATION : Fonction d'ouverture du modal d'édition avec correction motif rebut
+    async function openEditModal(entry){
+      await loadReferentiels(); 
+      
+      // IMPORTANT : Peupler d'abord les selects
+      populateSelects();
+      
+      // Ensuite définir les valeurs
+      document.getElementById('edit_id').value=entry._rowId;
+      document.getElementById('edit_id_rapport').value=entry.id_rapport||'';
+      document.getElementById('edit_date').value=toDatetimeLocal(entry.date_heure);
+      document.getElementById('edit_operateur').value=entry.operateur||'';
+      document.getElementById('edit_machine').value=entry.machine||'';
+      document.getElementById('edit_operation').value=entry.operation||'';
+      
+      // Pour l'édition on garde la logique simple: ref + lot séparés
+      const refOpt = `${entry.reference}|${entry.numero_lot||''}`;
+      const sel = document.getElementById('edit_reference');
+      if(sel && [...sel.options].some(o=>o.value===refOpt)) sel.value=refOpt;
+      
+      document.getElementById('edit_lot').value=entry.numero_lot||'';
+      document.getElementById('edit_equipe').value=entry.equipe||'';
+      document.getElementById('edit_nb_operateurs').value=entry.nb_operateurs||1;
+      document.getElementById('edit_qte_bonne').value=entry.quantite_bonne||0;
+      document.getElementById('edit_qte_rebut').value=entry.quantite_rebut||0;
+      
+      // CORRECTION MAJEURE : Définir le motif de rebut APRÈS avoir peuplé les options
+      // Et vérifier que le motif existe bien dans les options
+      const motifSelect = document.getElementById('edit_motif_rebut');
+      if (entry.motif_rebut && motifSelect) {
+        // Attendre un petit délai pour s'assurer que les options sont bien chargées
+        setTimeout(() => {
+          const motifOption = [...motifSelect.options].find(option => option.value === entry.motif_rebut);
+          if (motifOption) {
+            motifSelect.value = entry.motif_rebut;
+            console.log('Motif rebut défini:', entry.motif_rebut);
+          } else {
+            console.warn('Motif rebut non trouvé dans les options:', entry.motif_rebut);
+            // Ajouter l'option si elle n'existe pas (pour compatibilité)
+            const newOption = document.createElement('option');
+            newOption.value = entry.motif_rebut;
+            newOption.textContent = `${entry.motif_rebut} (Non référencé)`;
+            motifSelect.appendChild(newOption);
+            motifSelect.value = entry.motif_rebut;
+          }
+        }, 100);
+      }
+      
+      document.getElementById('edit_statut').value=entry.statut||'En cours';
+      document.getElementById('edit_commentaires').value=entry.commentaires||'';
+      document.getElementById('edit_info_id').textContent=entry.id??'—';
+      document.getElementById('edit_info_id_rapport').textContent=entry.id_rapport||'—';
+      document.getElementById('edit_info_date_creation').textContent=formatDate(entry.date_heure);
+      document.getElementById('edit_info_valideur').textContent=entry.valideur_id||'—';
+      
+      // Appliquer la logique des motifs de rebut
+      toggleMotifRebut();
+      openModal('editModal');
+    }
+
+    function toggleMotifRebut(){
+      const qteRebut=parseInt(document.getElementById('edit_qte_rebut').value)||0;
+      const motifContainer=document.getElementById('motifRebutContainer');
+      const motifSelect=document.getElementById('edit_motif_rebut');
+      const requiredMsg=document.getElementById('motifRequiredMsg');
+      if(qteRebut>0){
+        motifSelect.required=true;requiredMsg.classList.remove('hidden');motifContainer.classList.add('border','border-red-300')
+      }else{
+        motifSelect.required=false;motifSelect.value='';requiredMsg.classList.add('hidden');motifContainer.classList.remove('border','border-red-300')
+      }
+    }
+
+    // =========================
+    // Soumissions formulaires (ADD + UPDATE)
+    // =========================
+    document.getElementById('addForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+
+      // Récupère la ref choisie (code & lot)
+      const { code: refCode, lot: refLot } = getSelectedRefCodeLot();
+
+      // Récupère l'objet O_PROD choisi (o_prod, nom_sf, lot)
+      let oProdObj = null;
+      const v = document.getElementById('add_o_prod').value;
+      if(v){ try{ oProdObj = JSON.parse(v) }catch{} }
+
+      const formData={
+        id_rapport: document.getElementById('add_id_rapport').value,
+        date_heure: fromDatetimeLocal(document.getElementById('add_date').value),
+        operateur:  document.getElementById('add_operateur').value,
+        machine:    document.getElementById('add_machine').value,
+        operation:  document.getElementById('add_operation').value,
+
+        // Référence envoyée = code seul
+        reference:  refCode,
+
+        // Cohérence lot (depuis O_PROD si dispo, sinon celui de la ref)
+        numero_lot: (oProdObj?.lot || refLot || ''),
+
+        // Nouveaux champs
+        o_de_production: oProdObj?.o_prod || '',
+        nom_sf:          oProdObj?.nom_sf || '',
+
+        equipe:     document.getElementById('add_equipe').value,
+        nb_operateurs: parseInt(document.getElementById('add_nb_operateurs').value)||1,
+        num_lancement: document.getElementById('add_num_lancement').value
+      };
+
+      try{
+        const r=await fetch(`${CONFIG.API_BASE_URL}/add-entry`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(formData),
+          mode:'cors'
+        });
+        if(!r.ok){const t=await r.text();throw new Error(`HTTP ${r.status} - ${t}`)}
+        showNotification('Nouvelle opération LTM créée avec succès! ID: '+formData.id_rapport,'success');
+        closeModal('addModal'); setTimeout(()=>loadJournal(),1000);
+      }catch(err){
+        console.error('Erreur ajout:',err);
+        showNotification(`Erreur lors de la création de l'opération LTM: ${err.message}`,'error')
+      }
+    });
+
+    document.getElementById('editForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const qteRebut=parseInt(document.getElementById('edit_qte_rebut').value)||0;
+      const motifRebut=document.getElementById('edit_motif_rebut').value;
+      if(qteRebut>0 && !motifRebut){
+        showNotification('Le motif de rebut est obligatoire si la quantité rebutée est > 0','error');return
+      }
+
+      // Date figée = date de création, on renvoie telle quelle
+      const dateHeureFigee=fromDatetimeLocal(document.getElementById('edit_date').value);
+      const idRapportEdit = document.getElementById('edit_id_rapport').value || '';
+
+      const formData={
+        id_rapport: idRapportEdit,
+        date_heure: dateHeureFigee,
+        operateur: document.getElementById('edit_operateur').value,
+        machine:   document.getElementById('edit_machine').value,
+        operation: document.getElementById('edit_operation').value,
+
+        // On sépare référence & lot à l'édition
+        reference: (document.getElementById('edit_reference').value.split('|')[0] || ''),
+        numero_lot: document.getElementById('edit_lot').value,
+
+        equipe: document.getElementById('edit_equipe').value,
+        nb_operateurs: parseInt(document.getElementById('edit_nb_operateurs').value)||1,
+        quantite_bonne: parseInt(document.getElementById('edit_qte_bonne').value)||0,
+        quantite_rebut: qteRebut,
+        motif_rebut: motifRebut,
+        statut: document.getElementById('edit_statut').value,
+        commentaires: document.getElementById('edit_commentaires').value
+      };
+      
+      try{
+        const r=await fetch(`${CONFIG.API_BASE_URL}/update-entry`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(formData),
+          mode:'cors'
+        });
+        if(!r.ok){const t=await r.text();throw new Error(`HTTP ${r.status} - ${t}`)}
+        showNotification('Opération LTM modifiée avec succès!','success');
+        closeModal('editModal'); setTimeout(()=>loadJournal(),1000);
+      }catch(err){
+        console.error('Erreur update:',err);
+        showNotification(`Erreur lors de la modification de l'opération LTM: ${err.message}`,'error')
+      }
+    });
+
+    // =========================
+    // Dashboard & Référentiels
+    // =========================
+     function loadDashboard(){
+      const now = new Date();
+  const tz = 'Africa/Tunis';
+
+  const entriesToday = allJournalEntries.filter(e => {
+    const d = parseDateLTM(e.date_heure);
+    return d && sameDayInTZ(d, now, tz);
+  });
+
+  const prod  = entriesToday.reduce((s,e)=> s + (parseInt(e.quantite_bonne)||0), 0);
+  const rebut = entriesToday.reduce((s,e)=> s + (parseInt(e.quantite_rebut)||0), 0);
+  const total = prod + rebut;
+  const tauxQualite = total > 0 ? Math.round((prod/total)*100) : 100;
+
+  document.getElementById('kpiProductionJour').textContent = prod + ' pièces';
+  document.getElementById('kpiTauxQualite').textContent   = (tauxQualite||0) + '%';
+  document.getElementById('kpiEnCours').textContent       = allJournalEntries.filter(e => e.statut === 'En cours').length + ' opérations';
+  document.getElementById('kpiIncidents').textContent     = allJournalEntries.filter(e => (parseInt(e.quantite_rebut)||0) > 0).length + ' incidents';
+}
+
+    function showReferentiel(name){showNotification(`Ouverture du référentiel LTM: ${name}`,'info')}
+
+    // =========================
+    // Initialisation
+    // =========================
+    document.addEventListener('DOMContentLoaded',async ()=>{
+      try{await loadReferentiels()}catch(e){console.error('Erreur init référentiels:', e)}
+      showPage('journal');
+      showNotification('Système de production LTM initialisé','success');
+    });
+  </script>
+</body>
+</html>
